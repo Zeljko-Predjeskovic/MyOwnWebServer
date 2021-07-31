@@ -22,7 +22,6 @@ public class ContentReader {
         return fileData;
     }
 
-    // return supported MIME Types
     protected String getContentType(String fileRequested) {
         if (fileRequested.endsWith(".htm")  ||  fileRequested.endsWith(".html"))
             return "text/html";
@@ -36,7 +35,7 @@ public class ContentReader {
         byte[] fileData = readFileData(file, fileLength);
 
         out.println("HTTP/1.1 404 File Not Found");
-        out.println("Server: Java HTTP Server from SSaurel : 1.0");
+        out.println("Server: Java HTTP Server : 1.0");
         out.println("Date: " + new Date());
         out.println("Content-type: " + content);
         out.println("Content-length: " + fileLength);
