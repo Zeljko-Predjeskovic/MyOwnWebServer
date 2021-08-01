@@ -1,12 +1,8 @@
 package webServer;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import service.ContentReader;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
@@ -15,9 +11,9 @@ import java.util.StringTokenizer;
 
 public class HTTPServer implements Runnable{
 
-    private static final File WEB_ROOT = new File("./build/docs/javadoc");
-    private static final String DEFAULT_FILE = "index.html";
-    private static final String FILE_NOT_FOUND = "404.jsp";
+    private static final File WEB_ROOT = new File("./");
+    private static final String DEFAULT_FILE = "/src/main/resources/templates/index.html";
+    private static final String FILE_NOT_FOUND = "/src/main/resources/templates/404.html";
 
     private final ContentReader contentReader = new ContentReader();
 
@@ -95,6 +91,9 @@ public class HTTPServer implements Runnable{
 
     }
 
+    /**
+     * managing get request
+     */
     private void requests() {
 
         BufferedReader in = null;
@@ -131,7 +130,7 @@ public class HTTPServer implements Runnable{
 
         } catch (FileNotFoundException fnfe) {
             try {
-                contentReader.fileNotFound(out, dataOut, fileRequested,new File(WEB_ROOT, FILE_NOT_FOUND),verbose);
+                fileNotFound(out, dataOut, fileRequested,new File(WEB_ROOT, FILE_NOT_FOUND));
             } catch (IOException ioe) {
                 throw new RuntimeException("Error with file not found exception : " + ioe.getMessage());
             }
@@ -184,6 +183,35 @@ public class HTTPServer implements Runnable{
             if (verbose) {
                 System.out.println("File " + fileRequested + " of type " + content + " returned");
             }
+    }
+
+    /**
+     * Sending response with error page and header
+     * @param out
+     * @param dataOut
+     * @param fileRequested
+     * @param file
+     * @throws IOException
+     */
+    public void fileNotFound(PrintWriter out, OutputStream dataOut, String fileRequested, File file) throws IOException {
+        int fileLength = (int) file.length();
+        String content = "text/html";
+        byte[] fileData = contentReader.readFileData(file, fileLength);
+
+        out.println("HTTP/1.1 404 File Not Found");
+        out.println("Server: Java HTTP Server : 1.0");
+        out.println("Date: " + new Date());
+        out.println("Content-type: " + content);
+        out.println("Content-length: " + fileLength);
+        out.println(); // blank line between headers and content, very important !
+        out.flush(); // flush character output stream buffer
+
+        dataOut.write(fileData, 0, fileLength);
+        dataOut.flush();
+
+        if (verbose) {
+            System.out.println("File " + fileRequested + " not found");
+        }
     }
 
 
